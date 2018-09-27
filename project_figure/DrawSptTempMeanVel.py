@@ -15,14 +15,15 @@ global test_A , test_B
 class DrawSptTempMeanVel(object):
     '''Draw spatial-temperal mean velocity cell map'''
     
-    def __init__(self, df, local_y = 'local_y', lane_id = 'lane_id' , time_diff = 't_diff', v_vel = 'v_vel'):
+    def __init__(self, dfSubset, local_y = 'local_y', lane_id = 'lane_id' , time_diff = 't_diff', v_vel = 'v_vel'):
         '''The _colStr are the column name used'''
         # stroe the colname 
+        df = dfSubset
         df[local_y] = df[local_y].astype(float)
-                                                        # df[local_y] = df[local_y] * 0.3048 # convert feet to meter
+                                                        # df[local_y] = df[local_y] * 0.3048 # convert feet to meter # moved toNGE
         df[v_vel] = df[v_vel].astype(float)
                                                         # df[v_vel] = df[v_vel] * 0.3048 *3.6 # convert feet/s to km/h
-        df[v_vel] = df[v_vel] * 0.681818 # convert feet/s to mph
+                                                        # df[v_vel] = df[v_vel] * 0.681818 # convert feet/s to mph # moved to NgsimExtctor
         df[time_diff] = df[time_diff].astype(int)
         
         self.df = df 
@@ -39,6 +40,8 @@ class DrawSptTempMeanVel(object):
         self.mapMat = np.zeros(1)
         self.temperalGrid = np.array([0,1])
         self.spatialGrid = np.array([0,1])
+        self.spatialLevel = 50
+        self.temperalLevel = 100
         
         
     def SetLaneId(self, lane_id):
@@ -79,7 +82,8 @@ class DrawSptTempMeanVel(object):
 
         
         # pick the dataframe in a lane
-        df_inOneLane = df[df['lane_id'] == '2']
+        # df_inOneLane = df[df['lane_id'] == '2']
+        df_inOneLane = df[df['lane_id'] == self.lane_id]
 
         # loop
         for timeIdx, timeStart in enumerate(temperalGrid[:-1]):
@@ -100,7 +104,7 @@ class DrawSptTempMeanVel(object):
                 mapMat[spaceIdx, timeIdx] = meanVel
         return mapMat
     
-    def GetSpatialTemperalMap(self, spatialLevel = 100, temperalLevel = 100):
+    def GetSpatialTemperalMap(self, spatialLevel = 50, temperalLevel = 100):
         # get the grid information 
         minLocalY = min( self.df[self.local_y_colStr] ) ; maxLocalY = max( self.df[self.local_y_colStr] + 1.0 )
                                                           # +1 is because the ">= & <" is used in cell segmentation
@@ -117,6 +121,8 @@ class DrawSptTempMeanVel(object):
         '''the original below'''
         mapMat = self.GetSpatialTemperalMap_getMapMat(spatialGrid, temperalGrid)
         self.mapMat = mapMat
+        self.spatialLevel = 50
+        self.temperalLevel = 100
         
         return mapMat
         '''the test'''
@@ -132,22 +138,23 @@ class DrawSptTempMeanVel(object):
         cmap_name = 'traffic_heat_list'
         cmap = LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
 
-        fig, ax = plt.subplots(figsize = (20,20))
-        im = ax.imshow(data, cmap=cmap, interpolation = 'nearest')
+        fig, ax = plt.subplots(figsize = (20,10))
+        im = ax.imshow(data, cmap=cmap)
 
         # draw gridlines
         # ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=2)
-        ax.set_xticks(np.arange(-.5, 100,20))
-        ax.set_xticklabels(np.arange(0*27, 100*27, 20*27), fontsize = 16);
+        ax.set_xticks(np.arange(-.5, self.temperalLevel, 20))
+        ax.set_xticklabels(np.arange(0*27, self.temperalLevel*27, 20*27), fontsize = 16);
         ax.set_xlabel('time/s',fontsize = 16)
 
 
-        ax.set_yticks(np.arange(-.5, 50, 10));
-        ax.set_yticklabels(np.arange(0*13, 50*13, 10*13), fontsize = 16);
+        ax.set_yticks(np.arange(-.5, self.spatialLevel, 10));
+        ax.set_yticklabels(np.arange(0*13, self.spatialLevel*13, 10*13), fontsize = 16);
         ax.set_ylabel('distance/m',fontsize = 16)
 
         ax.set_ylim(ax.get_ylim()[::-1])
-        fig.colorbar(im, ax = ax)
+        cb = fig.colorbar(im, ax = ax)
+        cb.ax.tick_params(labelsize=16)
         #plf.xlabel()
 
         #plt.show()

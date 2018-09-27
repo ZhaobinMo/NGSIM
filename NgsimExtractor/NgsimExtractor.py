@@ -4,6 +4,7 @@ import pandas as pd
 from sodapy import Socrata
 import datetime
 from dateutil import tz
+import numpy as np
 
 
 
@@ -51,9 +52,16 @@ class NgsimExtractor(object):
         # CONVERT: some data type convert
         dfSet['vehicle_id'] = dfSet['vehicle_id'].astype(int)
         dfSet['v_class'] = dfSet['v_class'].astype(int)
+        dfSet['lane_id'] = dfSet['lane_id'].astype(int)
+        
+        dfSet['v_vel'] = dfSet['v_vel'].astype(float)
+        dfSet['v_vel'] = dfSet['v_vel'] * 0.681818 # convert feet/s to mph
+        
+        dfSet['local_y'] = dfSet['local_y'].astype(float)
+        dfSet['local_y'] = dfSet['local_y'] * 0.3048 # convert feet to meter
         
         # NEW COLUMN: t_diff
-        dfSet['t_diff'] = (dfSet['global_time'].astype(int) - self.minGlobalTime)/1000; dfSet['t_diff'] = dfSet['t_diff'].astype(int)
+        dfSet['t_diff'] = (dfSet['global_time'].astype(np.int64) - self.minGlobalTime)/1000; dfSet['t_diff'] = dfSet['t_diff'].astype(int)
         
         # NEW COLUMN: unit_id
         dfSet = self.addUnitId(dfSet)
@@ -73,7 +81,7 @@ class NgsimExtractor(object):
         df = df.sort_values([ 'vehicle_id', 'global_time', 'v_class'])
         mask_vehicleidNOTequal = df['vehicle_id'].ne(df['vehicle_id'].shift(1))
         mask_vclassNOTequal = df['v_class'].ne(df['v_class'].shift(1))
-        mask_timeNOTcontinuous = (df['global_time'].astype(int) ).ne( (df['global_time'].shift(1).fillna(0).astype(int) + self.gap ) )
+        mask_timeNOTcontinuous = (df['global_time'].astype(np.int64) ).ne( (df['global_time'].shift(1).fillna(0).astype(np.int64) + self.gap ) )
 
         # add the 'unit_id' to the not-continuous point
         mask = mask_vehicleidNOTequal | mask_vclassNOTequal | mask_timeNOTcontinuous
