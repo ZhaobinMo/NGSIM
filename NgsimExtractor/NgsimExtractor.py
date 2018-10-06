@@ -10,10 +10,10 @@ import numpy as np
 
 from CoordinateConverter import CoordinateConverter, wgs84, epsg2229
 class NgsimExtractor(object):
-    def __init__(self, location, gap):
-        print('begin init')
+    def __init__(self, location, gap, lane_id):
         self.location = location
         self.gap = gap
+        self.lane_id = lane_id
         if location == "\"us-101\"":
             self.minGlobalTime = 1118846979700
         elif location == "\"i-80\"":
@@ -22,15 +22,15 @@ class NgsimExtractor(object):
             self.minGlobalTime = 1163019100000
         else:
             print('the locaiton is wrong')
-        print('end init')
         print('gap={}'.format(gap))
         print('location = {}'.format(location))
+        print('lane_id = {}'.format(lane_id))
     def extractData( self ):
         ''''''
         # extract the raw date
         client = Socrata("data.transportation.gov", None)
-        LIMIT = 1000000
-        results = client.get("jqsx-yj2r", where = "global_time %{}=0 and location = {} ".format( self.gap, self.location) , limit = LIMIT)
+        LIMIT = 5000000
+        results = client.get("jqsx-yj2r", where = "global_time %{}=0 and location = {} and lane_id = {} ".format( self.gap, self.location, self.lane_id) , limit = LIMIT)
         results_df = pd.DataFrame.from_records(results)
         
         # warning about the LIMIT
@@ -61,7 +61,7 @@ class NgsimExtractor(object):
         dfSet['local_y'] = dfSet['local_y'] * 0.3048 # convert feet to meter
         
         # NEW COLUMN: t_diff
-        dfSet['t_diff'] = (dfSet['global_time'].astype(np.int64) - self.minGlobalTime)/1000; dfSet['t_diff'] = dfSet['t_diff'].astype(int)
+        dfSet['t_diff'] = (dfSet['global_time'].astype(float) - self.minGlobalTime)/1000; dfSet['t_diff'] = dfSet['t_diff'].astype(float)
         
         # NEW COLUMN: unit_id
         dfSet = self.addUnitId(dfSet)
