@@ -128,6 +128,7 @@ class DrawSptTempMeanVel(object):
         '''the test'''
         #return spatialGrid, temperalGrid
     def heatmap(self, path = './', filename = 'v_map.png'):
+        fontsize = 30
         # copy data from the self
         mapMat = self.mapMat; temperalGrid = self.temperalGrid; spatialGrid = self.spatialGrid
         data = mapMat
@@ -144,17 +145,17 @@ class DrawSptTempMeanVel(object):
         # draw gridlines
         # ax.grid(which='major', axis='both', linestyle='-', color='k', linewidth=2)
         ax.set_xticks(np.arange(-.5, self.temperalLevel, 20))
-        ax.set_xticklabels(np.arange(0*27, self.temperalLevel*27, 20*27), fontsize = 16);
-        ax.set_xlabel('time/s',fontsize = 16)
+        ax.set_xticklabels(np.arange(0*27, self.temperalLevel*27, 20*27), fontsize = fontsize);
+        ax.set_xlabel('elapsed time/s',fontsize = fontsize)
 
 
         ax.set_yticks(np.arange(-.5, self.spatialLevel, 10));
-        ax.set_yticklabels(np.arange(0*13, self.spatialLevel*13, 10*13), fontsize = 16);
-        ax.set_ylabel('distance/m',fontsize = 16)
+        ax.set_yticklabels(np.arange(0*13, self.spatialLevel*13, 10*13), fontsize = fontsize);
+        ax.set_ylabel('distance from entry/m',fontsize = fontsize)
 
         ax.set_ylim(ax.get_ylim()[::-1])
         cb = fig.colorbar(im, ax = ax)
-        cb.ax.tick_params(labelsize=16)
+        cb.ax.tick_params(labelsize=fontsize)
         #plf.xlabel()
 
         #plt.show()
